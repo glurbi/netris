@@ -58,7 +58,7 @@ mod tetris {
 
         }
 
-        fn pick_block(&mut self) {
+        fn pick_block(&'a mut self) {
             self.block = Some(self.blocks.choose(&mut self.rng).unwrap());
         }
     }

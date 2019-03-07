@@ -27,22 +27,30 @@ mod tetris {
         fn rotate(&self) -> Block {
             let mut cells = String::new();
             let bytes = self.cells.as_bytes();
-            for i in 0..self.width {
+            for i in (0..self.width).rev() {
                 for j in 0..self.height {
                     cells.push(bytes[j*self.width+i] as char);
                 }
+
             }
             Block { width: self.height, height: self.width, cells }
         }
     }
 
-    struct 
+    fn O() -> Block {
+        Block { width: 2, height: 2, cells: "####".to_string() }
+    }
+
+    fn I() -> Block {
+        Block { width: 1, height: 4, cells: "####".to_string() }
+    }
+
+    fn S() -> Block {
+        Block { width: 3, height: 2, cells: ".####.".to_string() }
+    }
 
     fn default_blocks() -> Vec<Block> {
-        let O = Block { width: 2, height: 2, cells: "####".to_string() };
-        let I = Block { width: 1, height: 4, cells: "####".to_string() };
-        let S = Block { width: 3, height: 2, cells: ".####.".to_string() }
-        vec![O, I]
+        vec![O(), I(), S()]
     }
 
     impl Board {
@@ -88,17 +96,14 @@ mod tetris {
 
         #[test]
         fn test_rotate_block() {
-            let O = Block { width: 2, height: 2, cells: "####".to_string() };
-            let O_rotated = O.rotate();
+            let O_rotated = O().rotate();
             assert_eq!(O_rotated, Block { width: 2, height: 2, cells: "####".to_string() });
 
-            let I = Block { width: 1, height: 4, cells: "####".to_string() };
-            let I_rotated = I.rotate();
+            let I_rotated = I().rotate();
             assert_eq!(I_rotated, Block { width: 4, height: 1, cells: "####".to_string() });
 
-            let S = Block { width: 1, height: 4, cells: "####".to_string() };
-            let I_rotated = I.rotate();
-            assert_eq!(I_rotated, Block { width: 4, height: 1, cells: "####".to_string() });
+            let S_rotated = S().rotate();
+            assert_eq!(S_rotated, Block { width: 2, height: 3, cells: "#.##.#".to_string() });
         }
 
     }

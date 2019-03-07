@@ -50,7 +50,7 @@ mod tetris {
     }
 
     fn Z() -> Block {
-        Block { width: 3, height: 2, cells: "##..##.".to_string() }
+        Block { width: 3, height: 2, cells: "##..##".to_string() }
     }
 
     fn L() -> Block {
@@ -112,6 +112,7 @@ mod tetris {
             assert_eq!(Z().rotate(), Block { width: 2, height: 3, cells: ".####.".to_string() });
             assert_eq!(Z().rotate().rotate(), Z());
             assert_eq!(L().rotate(), Block { width: 2, height: 3, cells: "#.#.##".to_string() });
+            assert_eq!(L().rotate().rotate(), Block { width: 3, height: 2, cells: "..####".to_string() });
         }
 
     }

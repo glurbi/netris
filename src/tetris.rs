@@ -5,11 +5,7 @@ mod tetris {
     use rand::prelude::*;
     use rand::seq::SliceRandom;
 
-    #[derive(Debug)]
-    pub enum RotateDir { Left, Right }
-    use RotateDir::*;
-
-    #[derive(Debug)]
+    #[derive(Debug, Clone, PartialEq)]
     pub struct Block {
         width: usize,
         height: usize,
@@ -17,30 +13,41 @@ mod tetris {
     }
 
     #[derive(Debug)]
-    pub struct Board<'a> {
+    pub struct Board {
         width: usize,
         height: usize,
         cells: Vec<bool>,
         score: usize,
-        block: Option<&'a Block>,
+        block: Option<Block>,
         blocks: Vec<Block>,
         rng: ThreadRng,
     }
 
-    impl<'a> Block {
-        fn rotate(&self, dir: RotateDir) -> Block {
-            Block { width: 2, height: 2, cells: "####".to_string() }
+    impl Block {
+        fn rotate(&self) -> Block {
+            let mut cells = String::new();
+            let bytes = self.cells.as_bytes();
+            for i in 0..self.width {
+                for j in 0..self.height {
+                    cells.push(bytes[j*self.width+i] as char);
+                }
+            }
+            Block { width: self.height, height: self.width, cells }
         }
     }
 
-    fn default_blocks<'a>() -> Vec<Block> {
+    struct 
+
+    fn default_blocks() -> Vec<Block> {
         let O = Block { width: 2, height: 2, cells: "####".to_string() };
-        vec![O]
+        let I = Block { width: 1, height: 4, cells: "####".to_string() };
+        let S = Block { width: 3, height: 2, cells: ".####.".to_string() }
+        vec![O, I]
     }
 
-    impl<'a> Board<'a> {
+    impl Board {
 
-        pub fn new(width: usize, height: usize) -> Board<'a> {
+        pub fn new(width: usize, height: usize) -> Board {
             let cells = vec![false; width * height];
             let rng = rand::thread_rng();
             Board {
@@ -58,8 +65,12 @@ mod tetris {
 
         }
 
-        fn pick_block(&'a mut self) {
-            self.block = Some(self.blocks.choose(&mut self.rng).unwrap());
+        pub fn current_block(&self) -> Option<&Block> {
+            self.block.as_ref()
+        }
+
+        fn pick_block(&mut self) -> Option<Block> {
+            Some(self.blocks.choose(&mut self.rng).unwrap().clone())
         }
     }
 
@@ -68,10 +79,28 @@ mod tetris {
         use super::*;
 
         #[test]
-        fn test_init() {
-            let board = Board::new(10, 20);
+        fn test_board() {
+            let mut board = Board::new(10, 20);
             assert_eq!(board.cells.len(), 200);
+            assert_eq!(board.current_block(), None);
+            board.block = board.pick_block();
         }
+
+        #[test]
+        fn test_rotate_block() {
+            let O = Block { width: 2, height: 2, cells: "####".to_string() };
+            let O_rotated = O.rotate();
+            assert_eq!(O_rotated, Block { width: 2, height: 2, cells: "####".to_string() });
+
+            let I = Block { width: 1, height: 4, cells: "####".to_string() };
+            let I_rotated = I.rotate();
+            assert_eq!(I_rotated, Block { width: 4, height: 1, cells: "####".to_string() });
+
+            let S = Block { width: 1, height: 4, cells: "####".to_string() };
+            let I_rotated = I.rotate();
+            assert_eq!(I_rotated, Block { width: 4, height: 1, cells: "####".to_string() });
+        }
+
     }
 
 }

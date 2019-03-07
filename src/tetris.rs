@@ -49,8 +49,16 @@ mod tetris {
         Block { width: 3, height: 2, cells: ".####.".to_string() }
     }
 
+    fn Z() -> Block {
+        Block { width: 3, height: 2, cells: "##..##.".to_string() }
+    }
+
+    fn L() -> Block {
+        Block { width: 3, height: 2, cells: "####..".to_string() }
+    }
+
     fn default_blocks() -> Vec<Block> {
-        vec![O(), I(), S()]
+        vec![O(), I(), S(), Z()]
     }
 
     impl Board {
@@ -96,14 +104,14 @@ mod tetris {
 
         #[test]
         fn test_rotate_block() {
-            let O_rotated = O().rotate();
-            assert_eq!(O_rotated, Block { width: 2, height: 2, cells: "####".to_string() });
-
-            let I_rotated = I().rotate();
-            assert_eq!(I_rotated, Block { width: 4, height: 1, cells: "####".to_string() });
-
-            let S_rotated = S().rotate();
-            assert_eq!(S_rotated, Block { width: 2, height: 3, cells: "#.##.#".to_string() });
+            assert_eq!(O().rotate(), O());
+            assert_eq!(I().rotate(), Block { width: 4, height: 1, cells: "####".to_string() });
+            assert_eq!(I().rotate().rotate(), I());
+            assert_eq!(S().rotate(), Block { width: 2, height: 3, cells: "#.##.#".to_string() });
+            assert_eq!(S().rotate().rotate(), S());
+            assert_eq!(Z().rotate(), Block { width: 2, height: 3, cells: ".####.".to_string() });
+            assert_eq!(Z().rotate().rotate(), Z());
+            assert_eq!(L().rotate(), Block { width: 2, height: 3, cells: "#.#.##".to_string() });
         }
 
     }

@@ -37,28 +37,36 @@ mod tetris {
         }
     }
 
-    fn O() -> Block {
+    fn o() -> Block {
         Block { width: 2, height: 2, cells: "####".to_string() }
     }
 
-    fn I() -> Block {
+    fn i() -> Block {
         Block { width: 1, height: 4, cells: "####".to_string() }
     }
 
-    fn S() -> Block {
+    fn s() -> Block {
         Block { width: 3, height: 2, cells: ".####.".to_string() }
     }
 
-    fn Z() -> Block {
+    fn z() -> Block {
         Block { width: 3, height: 2, cells: "##..##".to_string() }
     }
 
-    fn L() -> Block {
+    fn l() -> Block {
         Block { width: 3, height: 2, cells: "####..".to_string() }
     }
 
+    fn j() -> Block {
+        Block { width: 3, height: 2, cells: "###..#".to_string() }
+    }
+
+    fn t() -> Block {
+        Block { width: 3, height: 2, cells: "###.#.".to_string() }
+    }
+
     fn default_blocks() -> Vec<Block> {
-        vec![O(), I(), S(), Z()]
+        vec![o(), i(), s(), z(), l(), j(), t()]
     }
 
     impl Board {
@@ -104,15 +112,25 @@ mod tetris {
 
         #[test]
         fn test_rotate_block() {
-            assert_eq!(O().rotate(), O());
-            assert_eq!(I().rotate(), Block { width: 4, height: 1, cells: "####".to_string() });
-            assert_eq!(I().rotate().rotate(), I());
-            assert_eq!(S().rotate(), Block { width: 2, height: 3, cells: "#.##.#".to_string() });
-            assert_eq!(S().rotate().rotate(), S());
-            assert_eq!(Z().rotate(), Block { width: 2, height: 3, cells: ".####.".to_string() });
-            assert_eq!(Z().rotate().rotate(), Z());
-            assert_eq!(L().rotate(), Block { width: 2, height: 3, cells: "#.#.##".to_string() });
-            assert_eq!(L().rotate().rotate(), Block { width: 3, height: 2, cells: "..####".to_string() });
+            assert_eq!(o().rotate(), o());
+            assert_eq!(i().rotate(), Block { width: 4, height: 1, cells: "####".to_string() });
+            assert_eq!(i().rotate().rotate(), i());
+            assert_eq!(s().rotate(), Block { width: 2, height: 3, cells: "#.##.#".to_string() });
+            assert_eq!(s().rotate().rotate(), s());
+            assert_eq!(z().rotate(), Block { width: 2, height: 3, cells: ".####.".to_string() });
+            assert_eq!(z().rotate().rotate(), z());
+            assert_eq!(l().rotate(), Block { width: 2, height: 3, cells: "#.#.##".to_string() });
+            assert_eq!(l().rotate().rotate(), Block { width: 3, height: 2, cells: "..####".to_string() });
+            assert_eq!(l().rotate().rotate().rotate(), Block { width: 2, height: 3, cells: "##.#.#".to_string() });
+            assert_eq!(l().rotate().rotate().rotate().rotate(), l());
+            assert_eq!(j().rotate(), Block { width: 2, height: 3, cells: "###.#.".to_string() });
+            assert_eq!(j().rotate().rotate(), Block { width: 3, height: 2, cells: "#..###".to_string() });
+            assert_eq!(j().rotate().rotate().rotate(), Block { width: 2, height: 3, cells: ".#.###".to_string() });
+            assert_eq!(j().rotate().rotate().rotate().rotate(), j());
+            assert_eq!(t().rotate(), Block { width: 2, height: 3, cells: "#.###.".to_string() });
+            assert_eq!(t().rotate().rotate(), Block { width: 3, height: 2, cells: ".#.###".to_string() });
+            assert_eq!(t().rotate().rotate().rotate(), Block { width: 2, height: 3, cells: ".###.#".to_string() });
+            assert_eq!(t().rotate().rotate().rotate().rotate(), t());
         }
 
     }

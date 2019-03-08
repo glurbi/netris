@@ -11,14 +11,14 @@ mod tetris {
     pub struct Block {
         width: usize,
         height: usize,
-        cells: String,
+        cells: Vec<u8>,
     }
 
     #[derive(Debug)]
     pub struct Board {
         width: usize,
         height: usize,
-        cells: String,
+        cells: Vec<u8>,
         score: usize,
         block_pos: (usize, usize),
         block: Block,
@@ -29,51 +29,50 @@ mod tetris {
     impl Block {
 
         fn rotate(&self) -> Block {
-            let mut cells = String::new();
-            let bytes = self.cells.as_bytes();
+            let mut cells = Vec::with_capacity(self.width*self.height);
             for i in (0..self.width).rev() {
                 for j in 0..self.height {
-                    cells.push(bytes[j*self.width+i] as char);
+                    cells.push(self.cells[j*self.width+i]);
                 }
             }
             Block { width: self.height, height: self.width, cells }
         }
 
         fn cell(&self, i: usize, j: usize) -> char {
-            self.cells.as_bytes()[j*self.width + i] as char
+            self.cells[j*self.width + i] as char
         }
     }
 
     fn none() -> Block {
-        Block { width: 0, height: 0, cells: "".to_string() }
+        Block { width: 0, height: 0, cells: "".as_bytes().to_vec() }
     }
 
     fn o() -> Block {
-        Block { width: 2, height: 2, cells: "####".to_string() }
+        Block { width: 2, height: 2, cells: "####".as_bytes().to_vec() }
     }
 
     fn i() -> Block {
-        Block { width: 1, height: 4, cells: "####".to_string() }
+        Block { width: 1, height: 4, cells: "####".as_bytes().to_vec() }
     }
 
     fn s() -> Block {
-        Block { width: 3, height: 2, cells: ".####.".to_string() }
+        Block { width: 3, height: 2, cells: ".####.".as_bytes().to_vec() }
     }
 
     fn z() -> Block {
-        Block { width: 3, height: 2, cells: "##..##".to_string() }
+        Block { width: 3, height: 2, cells: "##..##".as_bytes().to_vec() }
     }
 
     fn l() -> Block {
-        Block { width: 3, height: 2, cells: "####..".to_string() }
+        Block { width: 3, height: 2, cells: "####..".as_bytes().to_vec() }
     }
 
     fn j() -> Block {
-        Block { width: 3, height: 2, cells: "###..#".to_string() }
+        Block { width: 3, height: 2, cells: "###..#".as_bytes().to_vec() }
     }
 
     fn t() -> Block {
-        Block { width: 3, height: 2, cells: "###.#.".to_string() }
+        Block { width: 3, height: 2, cells: "###.#.".as_bytes().to_vec() }
     }
 
     fn default_blocks() -> Vec<Block> {
@@ -83,7 +82,7 @@ mod tetris {
     impl Board {
 
         pub fn new(width: usize, height: usize) -> Board {
-            let cells = ".".repeat(width*height);
+            let cells = vec!['.' as u8; width*height];
             let rng = rand::thread_rng();
             Board {
                 width,
@@ -126,16 +125,14 @@ mod tetris {
                 for i in 0..self.block.width {
                     if self.block.cell(i,j) == '#' {
                         let offset = j*self.width + i + self.block_pos.0;
-                        unsafe {
-                            self.cells.as_bytes_mut()[offset] = '#' as u8;
-                        }
+                        self.cells[offset] = '#' as u8;
                     }
                 }
             }
         }
 
         fn cell(&self, (i, j): (usize, usize)) -> char {
-            self.cells.as_bytes()[j*self.width + i] as char
+            self.cells[j*self.width + i] as char
         }
 
         fn collide(&self, block: &Block, pos: (usize,usize)) -> bool {
@@ -152,10 +149,10 @@ mod tetris {
 
     impl fmt::Display for Board {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-            let cells = self.cells.clone();
             let mut s = String::with_capacity((self.width+1)*self.height);
             for j in 0..self.height {
-                s.push_str(&cells[j*self.width..j*self.width+self.width]);
+                let slice = &self.cells[j*self.width..j*self.width+self.width];
+                s.push_str(std::str::from_utf8(slice).unwrap());
                 s.push('\n');
             }
             write!(f, "{}", s)
@@ -169,8 +166,8 @@ mod tetris {
 
         #[test]
         fn test_move_blocks() {
-            let mut board = Board::new(3, 20);
-            assert_eq!(board.cells.len(), 3 * 20);
+            let mut board = Board::new(3, 10);
+            assert_eq!(board.cells.len(), 3 * 10);
             board.block = i();
             assert!(board.move_right());
             assert!(board.move_right());
@@ -183,23 +180,23 @@ mod tetris {
         #[test]
         fn test_rotate_block() {
             assert_eq!(o().rotate(), o());
-            assert_eq!(i().rotate(), Block { width: 4, height: 1, cells: "####".to_string() });
+            assert_eq!(i().rotate(), Block { width: 4, height: 1, cells: "####".as_bytes().to_vec() });
             assert_eq!(i().rotate().rotate(), i());
-            assert_eq!(s().rotate(), Block { width: 2, height: 3, cells: "#.##.#".to_string() });
+            assert_eq!(s().rotate(), Block { width: 2, height: 3, cells: "#.##.#".as_bytes().to_vec() });
             assert_eq!(s().rotate().rotate(), s());
-            assert_eq!(z().rotate(), Block { width: 2, height: 3, cells: ".####.".to_string() });
+            assert_eq!(z().rotate(), Block { width: 2, height: 3, cells: ".####.".as_bytes().to_vec() });
             assert_eq!(z().rotate().rotate(), z());
-            assert_eq!(l().rotate(), Block { width: 2, height: 3, cells: "#.#.##".to_string() });
-            assert_eq!(l().rotate().rotate(), Block { width: 3, height: 2, cells: "..####".to_string() });
-            assert_eq!(l().rotate().rotate().rotate(), Block { width: 2, height: 3, cells: "##.#.#".to_string() });
+            assert_eq!(l().rotate(), Block { width: 2, height: 3, cells: "#.#.##".as_bytes().to_vec() });
+            assert_eq!(l().rotate().rotate(), Block { width: 3, height: 2, cells: "..####".as_bytes().to_vec() });
+            assert_eq!(l().rotate().rotate().rotate(), Block { width: 2, height: 3, cells: "##.#.#".as_bytes().to_vec() });
             assert_eq!(l().rotate().rotate().rotate().rotate(), l());
-            assert_eq!(j().rotate(), Block { width: 2, height: 3, cells: "###.#.".to_string() });
-            assert_eq!(j().rotate().rotate(), Block { width: 3, height: 2, cells: "#..###".to_string() });
-            assert_eq!(j().rotate().rotate().rotate(), Block { width: 2, height: 3, cells: ".#.###".to_string() });
+            assert_eq!(j().rotate(), Block { width: 2, height: 3, cells: "###.#.".as_bytes().to_vec() });
+            assert_eq!(j().rotate().rotate(), Block { width: 3, height: 2, cells: "#..###".as_bytes().to_vec() });
+            assert_eq!(j().rotate().rotate().rotate(), Block { width: 2, height: 3, cells: ".#.###".as_bytes().to_vec() });
             assert_eq!(j().rotate().rotate().rotate().rotate(), j());
-            assert_eq!(t().rotate(), Block { width: 2, height: 3, cells: "#.###.".to_string() });
-            assert_eq!(t().rotate().rotate(), Block { width: 3, height: 2, cells: ".#.###".to_string() });
-            assert_eq!(t().rotate().rotate().rotate(), Block { width: 2, height: 3, cells: ".###.#".to_string() });
+            assert_eq!(t().rotate(), Block { width: 2, height: 3, cells: "#.###.".as_bytes().to_vec() });
+            assert_eq!(t().rotate().rotate(), Block { width: 3, height: 2, cells: ".#.###".as_bytes().to_vec() });
+            assert_eq!(t().rotate().rotate().rotate(), Block { width: 2, height: 3, cells: ".###.#".as_bytes().to_vec() });
             assert_eq!(t().rotate().rotate().rotate().rotate(), t());
         }
 

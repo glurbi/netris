@@ -1,6 +1,5 @@
 extern crate rand;
 
-
 mod tetris {
 
     use std::fmt;
@@ -129,11 +128,23 @@ mod tetris {
             return true;
         }
 
+        pub fn move_down(&mut self) -> bool {
+            let new_block_pos = (self.block_pos.0, self.block_pos.1 + 1);
+            if new_block_pos.1 + self.block.height > self.height {
+                return false;
+            }
+            if self.collide(&self.block, new_block_pos) {
+                return false;
+            }
+            self.block_pos = new_block_pos;
+            return true;
+        }
+
         fn settle_block(&mut self) {
             for j in 0..self.block.height {
                 for i in 0..self.block.width {
                     if self.block.cell(i,j) == '#' {
-                        let offset = j*self.width + i + self.block_pos.0;
+                        let offset = (j+self.block_pos.1)*self.width + (i + self.block_pos.0);
                         self.cells[offset] = '#' as u8;
                     }
                 }
@@ -174,9 +185,9 @@ mod tetris {
         use super::*;
 
         #[test]
-        fn test_move_blocks() {
-            let mut board = Board::new(3, 10);
-            assert_eq!(board.cells.len(), 3 * 10);
+        fn test_move_block_i() {
+            let mut board = Board::new(3, 6);
+            assert_eq!(board.cells.len(), 3 * 6);
             board.block = i();
             assert!(board.move_right());
             assert!(board.move_right());
@@ -184,6 +195,28 @@ mod tetris {
             assert!(board.move_left());
             assert!(board.move_left());
             assert!(!board.move_left());
+            assert!(board.move_down());
+            assert!(board.move_down());
+            assert!(!board.move_down());
+            board.settle_block();
+            println!("{}", board);
+            //println!("{:?}", board);
+        }
+
+        #[test]
+        fn test_move_block_o() {
+            let mut board = Board::new(3, 6);
+            assert_eq!(board.cells.len(), 3 * 6);
+            board.block = o();
+            assert!(board.move_right());
+            assert!(!board.move_right());
+            assert!(board.move_left());
+            assert!(!board.move_left());
+            assert!(board.move_down());
+            assert!(board.move_down());
+            assert!(board.move_down());
+            assert!(board.move_down());
+            assert!(!board.move_down());
             board.settle_block();
             println!("{}", board);
             //println!("{:?}", board);

@@ -95,25 +95,13 @@ mod tetris {
             }
         }
 
-        pub fn step(&mut self) {
-            
-        }
-
-        fn pick_block(&mut self) {
-            self.block = self.blocks.choose(&mut self.rng).unwrap().clone();
-            self.block_pos = (self.width/2, 0);
-        }
-
         pub fn move_right(&mut self) -> bool {
             let new_block_pos = (self.block_pos.0 + 1, self.block_pos.1);
-            if new_block_pos.0 + self.block.width > self.width {
-                return false;
-            }
             if self.collide(&self.block, new_block_pos) {
                 return false;
             }
             self.block_pos = new_block_pos;
-            return true;
+            true
         }
 
         pub fn move_left(&mut self) -> bool {
@@ -125,19 +113,30 @@ mod tetris {
                 return false;
             }
             self.block_pos = new_block_pos;
-            return true;
+            true
         }
 
         pub fn move_down(&mut self) -> bool {
             let new_block_pos = (self.block_pos.0, self.block_pos.1 + 1);
-            if new_block_pos.1 + self.block.height > self.height {
-                return false;
-            }
             if self.collide(&self.block, new_block_pos) {
                 return false;
             }
             self.block_pos = new_block_pos;
-            return true;
+            true
+        }
+
+        pub fn rotate(&mut self) -> bool {
+            let new_block = self.block.rotate();
+            if self.collide(&new_block, self.block_pos) {
+                return false;
+            }
+            self.block = new_block;
+            true
+        } 
+
+        fn spawn_block(&mut self) {
+            self.block = self.blocks.choose(&mut self.rng).unwrap().clone();
+            self.block_pos = (self.width/2, 0);
         }
 
         fn settle_block(&mut self) {
@@ -156,6 +155,12 @@ mod tetris {
         }
 
         fn collide(&self, block: &Block, pos: (usize,usize)) -> bool {
+            if pos.0 + block.width > self.width {
+                return true;
+            }
+            if pos.1 + block.height > self.height {
+                return true;
+            }
             for j in 0..block.height {
                 for i in 0..block.width {
                     if block.cell(i,j) == '#' && self.cell((i+pos.0, j+pos.1)) == '#' {
@@ -198,9 +203,6 @@ mod tetris {
             assert!(board.move_down());
             assert!(board.move_down());
             assert!(!board.move_down());
-            board.settle_block();
-            println!("{}", board);
-            //println!("{:?}", board);
         }
 
         #[test]
@@ -217,9 +219,39 @@ mod tetris {
             assert!(board.move_down());
             assert!(board.move_down());
             assert!(!board.move_down());
+        }
+
+        #[test]
+        fn test_move_block_t() {
+            let mut board = Board::new(3, 6);
+            assert_eq!(board.cells.len(), 3 * 6);
+            board.block = t();
+            assert!(!board.move_right());
+            assert!(!board.move_left());
+            assert!(board.move_down());
+            assert!(board.move_down());
+            assert!(board.move_down());
+            assert!(board.move_down());
+            assert!(!board.move_down());
+        }
+
+        #[test]
+        fn test_rotate_t() {
+            let mut board = Board::new(5, 5);
+            board.block = t();
+            assert!(board.move_right());
+            assert!(board.move_down());
+            assert!(board.rotate());
+            assert!(board.move_right());
+            assert!(board.move_right());
+            assert!(!board.rotate());
+            assert!(board.move_left());
+            assert!(board.rotate());
+            assert!(board.move_down());
+            assert!(board.move_down());
+            assert!(!board.rotate());
             board.settle_block();
             println!("{}", board);
-            //println!("{:?}", board);
         }
 
         #[test]

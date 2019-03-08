@@ -107,15 +107,24 @@ mod tetris {
 
         pub fn move_right(&mut self) -> bool {
             let new_block_pos = (self.block_pos.0 + 1, self.block_pos.1);
-
             if new_block_pos.0 + self.block.width > self.width {
                 return false;
             }
-
             if self.collide(&self.block, new_block_pos) {
                 return false;
             }
+            self.block_pos = new_block_pos;
+            return true;
+        }
 
+        pub fn move_left(&mut self) -> bool {
+            if self.block_pos.0 == 0 {
+                return false;
+            }
+            let new_block_pos = (self.block_pos.0 - 1, self.block_pos.1);
+            if self.collide(&self.block, new_block_pos) {
+                return false;
+            }
             self.block_pos = new_block_pos;
             return true;
         }
@@ -172,9 +181,12 @@ mod tetris {
             assert!(board.move_right());
             assert!(board.move_right());
             assert!(!board.move_right());
+            assert!(board.move_left());
+            assert!(board.move_left());
+            assert!(!board.move_left());
             board.settle_block();
             println!("{}", board);
-            println!("{:?}", board);
+            //println!("{:?}", board);
         }
 
         #[test]

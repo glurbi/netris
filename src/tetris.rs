@@ -25,6 +25,10 @@ mod tetris {
         rng: ThreadRng,
     }
 
+    pub struct Game {
+
+    }
+
     impl Block {
 
         fn rotate(&self) -> Block {
@@ -132,11 +136,35 @@ mod tetris {
             }
             self.block = new_block;
             true
-        } 
+        }
 
-        fn spawn_block(&mut self) {
-            self.block = self.blocks.choose(&mut self.rng).unwrap().clone();
-            self.block_pos = (self.width/2, 0);
+        pub fn land(&mut self) -> bool {
+            if !self.move_down() {
+                return false;
+            }
+            while self.move_down() {}
+            true
+        }
+
+        fn spawn_block(&mut self, block: Block) -> bool {
+            let block_pos = (self.width/2, 0);
+            if self.collide(&block, block_pos) {
+                return false;
+            }
+            self.block = block;
+            self.block_pos = block_pos;
+            true
+        }
+
+        fn spawn_random_block(&mut self) -> bool {
+            let block_pos = (self.width/2, 0);
+            let block = self.blocks.choose(&mut self.rng).unwrap().clone();
+            if self.collide(&block, block_pos) {
+                return false;
+            }
+            self.block = block;
+            self.block_pos = block_pos;
+            true
         }
 
         fn settle_block(&mut self) {
@@ -250,7 +278,18 @@ mod tetris {
             assert!(board.move_down());
             assert!(board.move_down());
             assert!(!board.rotate());
+        }
+
+        #[test]
+        fn test_land() {
+            let mut board = Board::new(5, 5);
+            assert!(board.spawn_block(t()));
+            assert!(board.land());
             board.settle_block();
+            assert!(board.spawn_block(o()));
+            assert!(board.land());
+            board.settle_block();
+            assert!(!board.spawn_block(z()));
             println!("{}", board);
         }
 

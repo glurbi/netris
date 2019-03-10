@@ -3,8 +3,11 @@ extern crate rand;
 mod tetris {
 
     use std::fmt;
-    use rand::prelude::*;
+    use std::sync::mpsc::{channel,Sender,Receiver};
+    use std::thread;
+    use rand::rngs::ThreadRng;
     use rand::seq::SliceRandom;
+    use Action::*;
 
     #[derive(Debug, Clone, PartialEq)]
     pub struct Block {
@@ -25,8 +28,41 @@ mod tetris {
         rng: ThreadRng,
     }
 
-    pub struct Game {
+    #[derive(Debug)]
+    pub enum Action {
+        MoveLeft,
+        MoveRight,
+        MoveDown,
+        Land,
+        Rotate,
+    }
 
+    pub struct Game {
+        tx: Sender<Action>,
+        //rx: Receiver<Action>,
+        board: Board,
+    }
+
+    impl Game {
+        pub fn new(width: usize, height: usize) -> Game {
+            let (tx, rx) = channel();
+            let board = Board::new(width, height);
+            thread::spawn(move || {
+                let mut iter = rx.iter();
+                loop {
+                    match iter.next() {
+                        Some(action) => println!("action={:?}", action),
+                        None => break,
+                    }
+                }
+            });
+
+            Game {
+                tx,
+                //rx,
+                board,
+            }
+        }
     }
 
     impl Block {
@@ -99,8 +135,11 @@ mod tetris {
             }
         }
 
-        pub fn move_right(&mut self) -> bool {
-            let new_block_pos = (self.block_pos.0 + 1, self.block_pos.1);
+        pub fn move_left(&mut self) -> bool {
+            if self.block_pos.0 == 0 {
+                return false;
+            }
+            let new_block_pos = (self.block_pos.0 - 1, self.block_pos.1);
             if self.collide(&self.block, new_block_pos) {
                 return false;
             }
@@ -108,11 +147,8 @@ mod tetris {
             true
         }
 
-        pub fn move_left(&mut self) -> bool {
-            if self.block_pos.0 == 0 {
-                return false;
-            }
-            let new_block_pos = (self.block_pos.0 - 1, self.block_pos.1);
+        pub fn move_right(&mut self) -> bool {
+            let new_block_pos = (self.block_pos.0 + 1, self.block_pos.1);
             if self.collide(&self.block, new_block_pos) {
                 return false;
             }
@@ -290,7 +326,6 @@ mod tetris {
             assert!(board.land());
             board.settle_block();
             assert!(!board.spawn_block(z()));
-            println!("{}", board);
         }
 
         #[test]
@@ -316,6 +351,11 @@ mod tetris {
             assert_eq!(t().rotate().rotate().rotate().rotate(), t());
         }
 
+        #[test]
+        fn test_game() {
+            let mut game = Game::new(10, 20);
+            game.tx.send(MoveLeft);
+        }
     }
 
 }

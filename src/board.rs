@@ -1,5 +1,5 @@
 use std::fmt;
-use rand::prelude::*;
+use rand::prelude::{ThreadRng,thread_rng};
 use rand::seq::SliceRandom;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -18,7 +18,6 @@ pub struct Board {
     block_pos: (usize, usize),
     block: Block,
     blocks: Vec<Block>,
-    rng: ThreadRng,
 }
 
 impl Block {
@@ -78,7 +77,6 @@ impl Board {
 
     pub fn new(width: usize, height: usize) -> Board {
         let cells = vec!['.' as u8; width*height];
-        let rng = rand::thread_rng();
         Board {
             width,
             height,
@@ -87,7 +85,6 @@ impl Board {
             block: none(),
             block_pos: (0, 0),
             blocks: default_blocks(),
-            rng,
         }
     }
 
@@ -136,9 +133,9 @@ impl Board {
         Ok(())
     }
 
-    fn spawn_random_block(&mut self) -> Result<(),()> {
+    fn spawn_random_block(&mut self, rng: &mut ThreadRng) -> Result<(),()> {
         let block_pos = (self.width/2, 0);
-        let block = self.blocks.choose(&mut self.rng).unwrap().clone();
+        let block = self.blocks.choose(rng).unwrap().clone();
         self.check_collide(&block, block_pos)?;
         self.block = block;
         self.block_pos = block_pos;

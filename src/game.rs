@@ -1,5 +1,5 @@
 use std::thread;
-use std::sync::mpsc::{channel,Sender,Receiver};
+use std::sync::mpsc::{channel,Sender};
 use crate::board::Board;
 use Action::*;
 
@@ -25,7 +25,7 @@ impl Game {
             let mut iter = rx.iter();
             loop {
                 match iter.next() {
-                    Some(action) => println!("action={:?}", action),
+                    Some(action) => (),
                     None => break,
                 }
             }

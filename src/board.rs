@@ -91,72 +91,58 @@ impl Board {
         }
     }
 
-    pub fn move_left(&mut self) -> bool {
+    pub fn move_left(&mut self) -> Result<(),()> {
         if self.block_pos.0 == 0 {
-            return false;
+            return Err(());
         }
         let new_block_pos = (self.block_pos.0 - 1, self.block_pos.1);
-        if self.collide(&self.block, new_block_pos) {
-            return false;
-        }
+        self.check_collide(&self.block, new_block_pos)?;
         self.block_pos = new_block_pos;
-        true
+        Ok(())
     }
 
-    pub fn move_right(&mut self) -> bool {
+    pub fn move_right(&mut self) -> Result<(),()> {
         let new_block_pos = (self.block_pos.0 + 1, self.block_pos.1);
-        if self.collide(&self.block, new_block_pos) {
-            return false;
-        }
+        self.check_collide(&self.block, new_block_pos)?;
         self.block_pos = new_block_pos;
-        true
+        Ok(())
     }
 
-    pub fn move_down(&mut self) -> bool {
+    pub fn move_down(&mut self) -> Result<(),()> {
         let new_block_pos = (self.block_pos.0, self.block_pos.1 + 1);
-        if self.collide(&self.block, new_block_pos) {
-            return false;
-        }
+        self.check_collide(&self.block, new_block_pos)?;
         self.block_pos = new_block_pos;
-        true
+        Ok(())
     }
 
-    pub fn rotate(&mut self) -> bool {
+    pub fn rotate(&mut self) -> Result<(),()> {
         let new_block = self.block.rotate();
-        if self.collide(&new_block, self.block_pos) {
-            return false;
-        }
+        self.check_collide(&new_block, self.block_pos)?;
         self.block = new_block;
-        true
+        Ok(())
     }
 
-    pub fn land(&mut self) -> bool {
-        if !self.move_down() {
-            return false;
-        }
-        while self.move_down() {}
-        true
+    pub fn land(&mut self) -> Result<(),()> {
+        self.move_down()?;
+        while let Ok(_) = self.move_down() {}
+        Ok(())
     }
 
-    fn spawn_block(&mut self, block: Block) -> bool {
+    fn spawn_block(&mut self, block: Block) -> Result<(),()> {
         let block_pos = (self.width/2, 0);
-        if self.collide(&block, block_pos) {
-            return false;
-        }
+        self.check_collide(&block, block_pos)?;
         self.block = block;
         self.block_pos = block_pos;
-        true
+        Ok(())
     }
 
-    fn spawn_random_block(&mut self) -> bool {
+    fn spawn_random_block(&mut self) -> Result<(),()> {
         let block_pos = (self.width/2, 0);
         let block = self.blocks.choose(&mut self.rng).unwrap().clone();
-        if self.collide(&block, block_pos) {
-            return false;
-        }
+        self.check_collide(&block, block_pos)?;
         self.block = block;
         self.block_pos = block_pos;
-        true
+        Ok(())
     }
 
     fn settle_block(&mut self) {
@@ -174,21 +160,21 @@ impl Board {
         self.cells[j*self.width + i] as char
     }
 
-    fn collide(&self, block: &Block, pos: (usize,usize)) -> bool {
+    fn check_collide(&self, block: &Block, pos: (usize,usize)) -> Result<(),()> {
         if pos.0 + block.width > self.width {
-            return true;
+            return Err(());
         }
         if pos.1 + block.height > self.height {
-            return true;
+            return Err(());
         }
         for j in 0..block.height {
             for i in 0..block.width {
                 if block.cell(i,j) == '#' && self.cell((i+pos.0, j+pos.1)) == '#' {
-                    return true;
+                    return Err(());
                 }
             }
         }
-        false
+        Ok(())
     }
 }
 
@@ -214,15 +200,15 @@ mod tests {
         let mut board = Board::new(3, 6);
         assert_eq!(board.cells.len(), 3 * 6);
         board.block = i();
-        assert!(board.move_right());
-        assert!(board.move_right());
-        assert!(!board.move_right());
-        assert!(board.move_left());
-        assert!(board.move_left());
-        assert!(!board.move_left());
-        assert!(board.move_down());
-        assert!(board.move_down());
-        assert!(!board.move_down());
+        assert_eq!(board.move_right(), Ok(()));
+        assert_eq!(board.move_right(), Ok(()));
+        assert_eq!(board.move_right(), Err(()));
+        assert_eq!(board.move_left(), Ok(()));
+        assert_eq!(board.move_left(), Ok(()));
+        assert_eq!(board.move_left(), Err(()));
+        assert_eq!(board.move_down(), Ok(()));
+        assert_eq!(board.move_down(), Ok(()));
+        assert_eq!(board.move_down(), Err(()));
     }
 
     #[test]
@@ -230,15 +216,15 @@ mod tests {
         let mut board = Board::new(3, 6);
         assert_eq!(board.cells.len(), 3 * 6);
         board.block = o();
-        assert!(board.move_right());
-        assert!(!board.move_right());
-        assert!(board.move_left());
-        assert!(!board.move_left());
-        assert!(board.move_down());
-        assert!(board.move_down());
-        assert!(board.move_down());
-        assert!(board.move_down());
-        assert!(!board.move_down());
+        assert_eq!(board.move_right(), Ok(()));
+        assert_eq!(board.move_right(), Err(()));
+        assert_eq!(board.move_left(), Ok(()));
+        assert_eq!(board.move_left(), Err(()));
+        assert_eq!(board.move_down(), Ok(()));
+        assert_eq!(board.move_down(), Ok(()));
+        assert_eq!(board.move_down(), Ok(()));
+        assert_eq!(board.move_down(), Ok(()));
+        assert_eq!(board.move_down(), Err(()));
     }
 
     #[test]
@@ -246,42 +232,42 @@ mod tests {
         let mut board = Board::new(3, 6);
         assert_eq!(board.cells.len(), 3 * 6);
         board.block = t();
-        assert!(!board.move_right());
-        assert!(!board.move_left());
-        assert!(board.move_down());
-        assert!(board.move_down());
-        assert!(board.move_down());
-        assert!(board.move_down());
-        assert!(!board.move_down());
+        assert_eq!(board.move_right(), Err(()));
+        assert_eq!(board.move_left(), Err(()));
+        assert_eq!(board.move_down(), Ok(()));
+        assert_eq!(board.move_down(), Ok(()));
+        assert_eq!(board.move_down(), Ok(()));
+        assert_eq!(board.move_down(), Ok(()));
+        assert_eq!(board.move_down(), Err(()));
     }
 
     #[test]
     fn test_rotate_t() {
         let mut board = Board::new(5, 5);
         board.block = t();
-        assert!(board.move_right());
-        assert!(board.move_down());
-        assert!(board.rotate());
-        assert!(board.move_right());
-        assert!(board.move_right());
-        assert!(!board.rotate());
-        assert!(board.move_left());
-        assert!(board.rotate());
-        assert!(board.move_down());
-        assert!(board.move_down());
-        assert!(!board.rotate());
+        assert_eq!(board.move_right(), Ok(()));
+        assert_eq!(board.move_down(), Ok(()));
+        assert_eq!(board.rotate(), Ok(()));
+        assert_eq!(board.move_right(), Ok(()));
+        assert_eq!(board.move_right(), Ok(()));
+        assert_eq!(board.rotate(), Err(()));
+        assert_eq!(board.move_left(), Ok(()));
+        assert_eq!(board.rotate(), Ok(()));
+        assert_eq!(board.move_down(), Ok(()));
+        assert_eq!(board.move_down(), Ok(()));
+        assert_eq!(board.rotate(), Err(()));
     }
 
     #[test]
     fn test_land() {
         let mut board = Board::new(5, 5);
-        assert!(board.spawn_block(t()));
-        assert!(board.land());
+        assert_eq!(board.spawn_block(t()), Ok(()));
+        assert_eq!(board.land(), Ok(()));
         board.settle_block();
-        assert!(board.spawn_block(o()));
-        assert!(board.land());
+        assert_eq!(board.spawn_block(o()), Ok(()));
+        assert_eq!(board.land(), Ok(()));
         board.settle_block();
-        assert!(!board.spawn_block(z()));
+        assert_eq!(board.spawn_block(z()), Err(()));
     }
 
     #[test]

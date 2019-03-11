@@ -1,8 +1,6 @@
-use std::thread;
-use std::sync::mpsc::{channel,Sender};
-use rand::prelude::{ThreadRng,thread_rng};
+use rand::prelude::*;
 use crate::board::Board;
-use std::sync::Arc;
+use actix::prelude::*;
 
 #[derive(Debug)]
 pub enum Action {
@@ -11,47 +9,48 @@ pub enum Action {
     MoveDown,
     Land,
     Rotate,
+    Stop,
 }
 
+impl Message for Action {
+    type Result = ();
+}
+
+#[derive(Debug)]
 pub struct Game {
     board: Board,
 }
 
-pub struct GameMediator {
-    tx: Sender<Action>,
+impl Actor for Game {
+    type Context = Context<Self>;
+
+    fn started(&mut self, ctx: &mut Self::Context) {
+       println!("I am alive!");
+    }
 }
 
-impl Game {
-    pub fn new(width: usize, height: usize) -> GameMediator {
-        let (tx, rx) = channel();
-        let board = Board::new(width, height);
+impl Handler<Action> for Game {
+    type Result = ();
 
-        let mut game = Game {
-            board,
-        };
-
-        thread::spawn(move || {
-            let rng = thread_rng();
-            let mut iter = rx.iter();
-            for a in rx {
-                game.handle_action(&a);
-            }
-        });
-
-        GameMediator {
-            tx,
-        }
-    }
-
-    fn handle_action(&mut self, a: &Action) {
+    fn handle(&mut self, a: Action, ctx: &mut Context<Self>) -> Self::Result {
+        println!("handling {:?}", &a);
         use Action::*;
-        match a {
+        let _ = match a {
             MoveLeft => self.board.move_left(),
             MoveRight => self.board.move_right(),
             MoveDown => self.board.move_down(),
             Land => self.board.land(),
             Rotate => self.board.rotate(),
+            Stop => { System::current().stop(); Ok(()) },
         };
+    }
+}
+
+impl Game {
+    pub fn new(width: usize, height: usize) -> Game {
+        Game {
+            board: Board::new(width, height),
+        }
     }
 }
 
@@ -62,7 +61,14 @@ mod tests {
 
     #[test]
     fn test_game() {
-        let mut game = Game::new(10, 20);
-        game.tx.send(Action::MoveLeft);
+        let system = System::new("test");
+        let game = Game::new(10, 20);
+        let addr = game.start();
+        println!("{:?}", addr);
+        addr.do_send(Action::MoveLeft);
+        println!("AAA");
+        addr.do_send(Action::Stop);
+        println!("BBB");
+        system.run();
     }
 }

@@ -1,5 +1,6 @@
 mod board;
 mod game;
+mod manager;
 
 use game::Game;
 
